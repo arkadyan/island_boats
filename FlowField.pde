@@ -7,7 +7,7 @@ class FlowField {
   private static final color ARROW_COLOR = #cccccc;
   private static final int ARROW_SIZE = 4;
   
-  private Vec2D[][] field;   // A flow field is a two-dimensional array of vectors
+  private FlowFieldVector[][] field;   // A flow field is a two-dimensional array of vectors
   private int worldWidth, worldHeight;   // The size of the world
   private int resolution;
   private int cols, rows;
@@ -20,7 +20,7 @@ class FlowField {
     // Determine the number of columns and rows
     cols = worldWidth / resolution;
     rows = worldHeight / resolution;
-    field = new Vec2D[cols][rows];
+    field = new FlowFieldVector[cols][rows];
     init();
   }
   
@@ -36,10 +36,10 @@ class FlowField {
     for (int i=0; i < cols; i++) {
       float yoff = 0;
       for (int j=0; j < rows; j++) {
-        float theta = map(noise(xoff, yoff), 0, 1, 0, TWO_PI);
         // Polar to cartesian coordinate transformation to get 
         // x and y components of the vector.
-        field[i][j] = new Vec2D(cos(theta), sin(theta));
+        float theta = map(noise(xoff, yoff), 0, 1, 0, TWO_PI);
+        field[i][j] = new FlowFieldVector(new Vec2D(i*resolution, j*resolution), new Vec2D(cos(theta), sin(theta)));
         yoff += 0.1;
       }
       xoff += 0.1;
@@ -54,7 +54,7 @@ class FlowField {
     int row = int(constrain(lookup.y/resolution, 0, rows-1));
     
     // Return a copy of the vector.
-    return field[column][row].copy();
+    return field[column][row].force().copy();
   }
   
   /**
@@ -63,7 +63,7 @@ class FlowField {
   public void draw(ToxiclibsSupport gfx) {
     for (int i=0; i < cols; i++) {
       for (int j=0; j < rows; j++) {
-        drawVector(gfx, field[i][j], i*resolution, j*resolution, resolution-2);
+        drawVector(gfx, field[i][j], resolution-2);
       }
     }
   }
@@ -74,29 +74,23 @@ class FlowField {
    *
    * @param gfx  The Toxiclibs drawing object.
    * @param v  The vector to be drawn.
-   * @param x  The x component of the location to draw the vector.
-   * @param y  The y component of the location to draw the vector.
    * @param scayl  How much to scale the drawing of the vector.
    */
-  private void drawVector(ToxiclibsSupport gfx, Vec2D v, float x, float y, float scayl) {
+  private void drawVector(ToxiclibsSupport gfx, FlowFieldVector v, float scayl) {
     pushMatrix();
-    
-    // Translate to location to render the vector.
-    translate(x, y);
+
     stroke(ARROW_COLOR);
-    // Call vector heading function to get direction
-    // (note that pointing up is a heading of 0) and rotate.
-    rotate(v.heading());
-    // Calculate the length of the vector & scale it to be bigger
-    // or smaller as necessary.
-    float len = v.magnitude() * scayl;
-    
-    // Draw three lines to make an arrow (draw pointing up
-    // since we've rotated to the proper direction).
+    // Draw three lines to make an arrow.
+    Vec2D pos = v.position();
+    Vec2D scaledForce = v.force().scale(scayl);
+    Vec2D arrowTip = pos.add(scaledForce);
+    Vec2D arrowEdge = pos.sub(arrowTip).normalizeTo(ARROW_SIZE);
     beginShape();
-    line(0, 0, len, 0);
-    line(len, 0, len-ARROW_SIZE, +ARROW_SIZE/2);
-    line(len, 0, len-ARROW_SIZE, -ARROW_SIZE/2);
+    // Main shaft of the arrow.
+    gfx.line(pos, arrowTip);
+    // Two edges of the arrow.
+    gfx.line(arrowTip, arrowTip.add(arrowEdge.copy().rotate(0.5235988)));
+    gfx.line(arrowTip, arrowTip.add(arrowEdge.copy().rotate(-0.5235988)));
     endShape();
     
     popMatrix();
