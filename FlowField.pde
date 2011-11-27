@@ -93,9 +93,11 @@ class FlowField {
     
     // Draw three lines to make an arrow (draw pointing up
     // since we've rotated to the proper direction).
+    beginShape();
     line(0, 0, len, 0);
     line(len, 0, len-ARROW_SIZE, +ARROW_SIZE/2);
     line(len, 0, len-ARROW_SIZE, -ARROW_SIZE/2);
+    endShape();
     
     popMatrix();
   }
