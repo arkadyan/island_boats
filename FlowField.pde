@@ -4,7 +4,7 @@ class FlowField {
   import toxi.processing.*;
   
 
-  private static final color ARROW_COLOR = #cccccc;
+  private static final color ARROW_COLOR = #888888;
   private static final int ARROW_SIZE = 4;
   
   private FlowFieldVector[][] field;   // A flow field is a two-dimensional array of vectors
@@ -77,22 +77,10 @@ class FlowField {
    * @param scayl  How much to scale the drawing of the vector.
    */
   private void drawVector(ToxiclibsSupport gfx, FlowFieldVector v, float scayl) {
-    pushMatrix();
-
     stroke(ARROW_COLOR);
-    // Draw three lines to make an arrow.
     Vec2D pos = v.position();
     Vec2D scaledForce = v.force().scale(scayl);
     Vec2D arrowTip = pos.add(scaledForce);
-    Vec2D arrowEdge = pos.sub(arrowTip).normalizeTo(ARROW_SIZE);
-    beginShape();
-    // Main shaft of the arrow.
-    gfx.line(pos, arrowTip);
-    // Two edges of the arrow.
-    gfx.line(arrowTip, arrowTip.add(arrowEdge.copy().rotate(0.5235988)));
-    gfx.line(arrowTip, arrowTip.add(arrowEdge.copy().rotate(-0.5235988)));
-    endShape();
-    
-    popMatrix();
+    Arrow.draw(gfx, pos, arrowTip, ARROW_SIZE);
   }
 }

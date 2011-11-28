@@ -65,7 +65,6 @@ class Boat extends Mover {
     // Draw the boat's velocity
     stroke(#ff00ff);
     fill(#ff00ff);
-    gfx.line(position, position.add(velocity));
-/*    gfx.ellipse(new Ellipse(predictedPosition, 4));*/
+    Arrow.draw(gfx, position, position.add(velocity.scale(100)), 4);
   }
 }
